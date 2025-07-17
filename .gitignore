@@ -1,0 +1,17 @@
+# Ignore target directory (compiled classes)
+target/
+
+# IDE-specific files
+*.iml
+.idea/
+.vscode/
+
+# OS-specific files
+.DS_Store
+
+# Logs
+*.log
+
+# Sensitive config files
+src/main/resources/application.properties
+src/main/java/com/cms/config/SecurityConfig.java
