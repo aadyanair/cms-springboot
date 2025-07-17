@@ -1,13 +1,17 @@
 package com.cms.controller;
 
+
+import com.cms.model.User;
 import com.cms.model.Complaint;
 import com.cms.repository.ComplaintRepository;
+import com.cms.repository.UserRepository;
 import com.cms.security.JwtUtil;
 import com.cms.service.EmailService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.beans.factory.annotation.Value;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -25,6 +29,12 @@ public class ComplaintController {
     @Autowired
     private EmailService emailService;
 
+    @Autowired
+    private UserRepository userRepository;
+
+    @Value("${admin.email}")
+    private String adminEmail;
+
     // POST - Add a complaint
     @PostMapping
     public ResponseEntity<String> submitComplaint(@RequestBody Complaint complaint, HttpServletRequest request) {
@@ -37,7 +47,7 @@ public class ComplaintController {
 
         // Send email to admin
         emailService.sendComplaintStatusUpdate(
-            "aadyanair49@gmail.com",
+            adminEmail,    
             "New Complaint Submitted",
             "A new complaint has been submitted by "+username+": \n\nTitle: "+complaint.getTitle()
         );
@@ -53,4 +63,34 @@ public class ComplaintController {
         List<Complaint> complaints = complaintRepository.findByUsername(username);
         return ResponseEntity.ok(complaints);
     }
+
+
+    // PUT - Update complaint status
+    @PutMapping("/{id}/status")
+    public ResponseEntity<?> updateComplaintStatus(@PathVariable Long id, @RequestParam String status) {
+        
+
+        Complaint complaint = complaintRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Complaint not found"));
+
+        complaint.setStatus(status);
+        complaintRepository.save(complaint);
+
+        // Get the user email via username in complaint
+        String username = complaint.getUsername();
+        User user = userRepository.findByUsername(username);
+
+        if (user != null && user.getEmail() != null) {
+            String subject = "Complaint Status Update";
+            String body = "Dear " + username + ",\n\n"
+                    + "Your complaint titled \"" + complaint.getTitle() + "\" has been marked as " + status + ".\n\n"
+                    + "Regards,\nComplaint Management System";
+
+            emailService.sendComplaintStatusUpdate(user.getEmail(), subject, body);
+        }
+
+        return ResponseEntity.ok("Complaint status updated and email sent.");
+    }
+
+
 }
