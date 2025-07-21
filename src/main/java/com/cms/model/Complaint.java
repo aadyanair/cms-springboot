@@ -30,4 +30,9 @@ public class Complaint {
     @OneToMany(mappedBy = "complaint", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comment> comments = new ArrayList<>();
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ComplaintCategory category;
+
+
 }

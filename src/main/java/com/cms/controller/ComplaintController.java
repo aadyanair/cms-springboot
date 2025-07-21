@@ -3,6 +3,7 @@ package com.cms.controller;
 
 import com.cms.model.User;
 import com.cms.model.Complaint;
+import com.cms.model.ComplaintCategory;
 import com.cms.repository.ComplaintRepository;
 import com.cms.repository.UserRepository;
 import com.cms.security.JwtUtil;
@@ -43,7 +44,20 @@ public class ComplaintController {
 
         complaint.setUsername(username);
         complaint.setStatus("PENDING");
+
+        if(complaint.getCategory()==null) {
+            return ResponseEntity.badRequest().body("Complaint category is missing or invalid.");
+        }
+
         complaintRepository.save(complaint);
+
+
+
+        // try{
+        //     ComplaintCategory.valueOf(complaint.getCategory()); 
+        // } catch (IllegalArgumentException e) {
+        //     return ResponseEntity.badRequest().body("Invalid complaint category.");
+        // }
 
         // Send email to admin
         emailService.sendComplaintStatusUpdate(
